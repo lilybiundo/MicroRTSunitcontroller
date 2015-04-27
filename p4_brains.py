@@ -4,56 +4,65 @@ import random
 # EXAMPLE STATE MACHINE
 class MantisBrain:
 
-  def __init__(self, body):
-    self.body = body
-    self.state = 'idle'
-    self.target = None
+	def __init__(self, body):
+		self.body = body
+		self.state = 'idle'
+		self.target = None
 
-  def handle_event(self, message, details):
+	def handle_event(self, message, details):
 
-    if self.state is 'idle':
+		if self.state is 'idle':
 
-      if message == 'timer':
-        # go to a random point, wake up sometime in the next 10 seconds
-        world = self.body.world
-        x, y = random.random()*world.width, random.random()*world.height
-        self.body.go_to((x,y))
-        self.body.set_alarm(random.random()*10)
+			if message == 'timer':
+				# go to a random point, wake up sometime in the next 10 seconds
+				world = self.body.world
+				x, y = random.random()*world.width, random.random()*world.height
+				self.body.go_to((x,y))
+				self.body.set_alarm(random.random()*10)
 
-      elif message == 'collide' and details['what'] == 'Slug':
-        # a slug bumped into us; get curious
-        self.state = 'curious'
-        self.body.set_alarm(1) # think about this for a sec
-        self.body.stop()
-        self.target = details['who']
+			elif message == 'collide' and details['what'] == 'Slug':
+				# a slug bumped into us; get curious
+				self.state = 'curious'
+				self.body.set_alarm(1) # think about this for a sec
+				self.body.stop()
+				self.target = details['who']
 
-    elif self.state == 'curious':
+		elif self.state == 'curious':
 
-      if message == 'timer':
-        # chase down that slug who bumped into us
-        if self.target:
-          if random.random() < 0.5:
-            self.body.stop()
-            self.state = 'idle'
-          else:
-            self.body.follow(self.target)
-          self.body.set_alarm(1)
-      elif message == 'collide' and details['what'] == 'Slug':
-        # we meet again!
-        slug = details['who']
-        slug.amount -= 0.01 # take a tiny little bite
+			if message == 'timer':
+				# chase down that slug who bumped into us
+				if self.target:
+					if random.random() < 0.5:
+						self.body.stop()
+						self.state = 'idle'
+					else:
+						self.body.follow(self.target)
+						self.body.set_alarm(1)
+			elif message == 'collide' and details['what'] == 'Slug':
+				# we meet again!
+				slug = details['who']
+				slug.amount -= 0.01 # take a tiny little bite
     
 class SlugBrain:
 
-  def __init__(self, body):
-    self.body = body
+	def __init__(self, body):
+		self.body = body
+		self.state = 'idle'
+		self.target = None
 
 
-  def handle_event(self, message, details):
-    # TODO: IMPLEMENT THIS METHOD
-    #  (Use helper methods and classes to keep your code organized where
-    #  approprioate.)
-    pass    
+	def handle_event(self, message, details):
+		# TODO: IMPLEMENT THIS METHOD
+		#  (Use helper methods and classes to keep your code organized where
+		#  appropriate.)
+		
+		#print "Mess: " + str(message) + " Details: " + str(details)
+		
+		if self.state is 'idle':
+		
+			if message == 'order':
+				self.body.go_to(details)
+ 
 
 world_specification = {
   'worldgen_seed': 13, # comment-out to randomize
