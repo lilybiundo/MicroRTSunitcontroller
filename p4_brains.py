@@ -49,6 +49,7 @@ class SlugBrain:
 		self.body = body
 		self.state = 'idle'
 		self.target = None
+		self.resource = False
 
 	def followmantis(self):
 		try:
@@ -60,6 +61,29 @@ class SlugBrain:
 			print "No more mantises!"
 			self.body.stop()
 			self.state = 'idle'
+			
+	def findnest(self):
+		nest = self.body.find_nearest('Nest')
+		self.body.go_to(nest)
+		self.state = 'build'
+		self.body.set_alarm(.5)
+		
+	def findresource(self):
+		try:
+			resource = self.body.find_nearest('Resource')
+			self.body.go_to(resource)
+			self.state = 'harvest'
+			self.body.set_alarm(2)
+		except ValueError:
+			print "No more resources!"
+			self.body.stop()
+			self.state = 'idle'
+		
+	def deliverresource(self):
+		nest = self.body.find_nearest('Nest')
+		self.body.go_to(nest)
+		self.state = 'harvest'
+		self.body.set_alarm(2)
 		
 		
 	def handle_event(self, message, details):
@@ -79,10 +103,13 @@ class SlugBrain:
 				self.followmantis()
 			elif details == 'h':
 				#switch to harvest mode
-				self.state = 'harvest'
+				if self.resource == False:
+					self.findresource()
+				else:
+					self.deliverresource()
 			elif details == 'b':
-				#switch to build mode
-				self.state = 'build'
+				#switch to build mode			
+				self.findnest()
 			else:
 				#goto target, then idle
 				try:
@@ -96,16 +123,33 @@ class SlugBrain:
 			if message == 'timer':
 				self.followmantis()
 				
-			if message == 'collide' and details['what'] == 'Mantis':
+			elif message == 'collide' and details['what'] == 'Mantis':
 				mantis = details['who']
 				mantis.amount -= .05
 					
 		
 		elif self.state == 'harvest':
-			pass
+			if message == 'timer':
+				if self.resource == False:
+					self.findresource()
+				else:
+					self.deliverresource()
+					
+			if message == 'collide':
+				if details['what'] == 'Resource' and self.resource == False:
+					resource = details['who']
+					resource.amount -= .25
+					self.resource = True
+				elif details['what'] == 'Nest' and self.resource == True:
+					self.resource = False
+				
 		
 		elif self.state == 'build':
-			pass
+			if message == 'timer':
+				self.findnest()
+			elif message == 'collide' and details['what'] == 'Nest':
+				nest = details['who']
+				nest.amount += .01
 		
 
 world_specification = {
