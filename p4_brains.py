@@ -85,6 +85,11 @@ class SlugBrain:
 		self.state = 'harvest'
 		self.body.set_alarm(2)
 		
+	def healatnest(self):
+		nest = self.body.find_nearest('Nest')
+		self.body.go_to(nest)
+		self.state = 'flee'
+		self.body.set_alarm(2)
 		
 	def handle_event(self, message, details):
 		# TODO: IMPLEMENT THIS METHOD
@@ -93,31 +98,35 @@ class SlugBrain:
 		
 		#print "Mess: " + str(message) + " Details: " + str(details)
 		
-		if message == 'order':
-			if details == 'i':
-				#go idle
-				self.body.stop()
-				self.state = 'idle'
-			elif details == 'a':
-				#switch to attack mode if there is a mantis to attack
-				self.followmantis()
-			elif details == 'h':
-				#switch to harvest mode
-				if self.resource == False:
-					self.findresource()
-				else:
-					self.deliverresource()
-			elif details == 'b':
-				#switch to build mode			
-				self.findnest()
-			else:
-				#goto target, then idle
-				try:
-					self.body.go_to(details)
+		if self.body.amount <= .5:
+			self.healatnest()
+		
+		if self.state != 'flee':
+			if message == 'order':
+				if details == 'i':
+					#go idle
+					self.body.stop()
 					self.state = 'idle'
-				except TypeError:
-					print "Invalid command: " + str(details)
-			#print self.state
+				elif details == 'a':
+					#switch to attack mode if there is a mantis to attack
+					self.followmantis()
+				elif details == 'h':
+					#switch to harvest mode
+					if self.resource == False:
+						self.findresource()
+					else:
+						self.deliverresource()
+				elif details == 'b':
+					#switch to build mode			
+					self.findnest()
+				else:
+					#goto target, then idle
+					try:
+						self.body.go_to(details)
+						self.state = 'idle'
+					except TypeError:
+						print "Invalid command: " + str(details)
+				#print self.state
 		
 		if self.state == 'attack':
 			if message == 'timer':
@@ -150,6 +159,14 @@ class SlugBrain:
 			elif message == 'collide' and details['what'] == 'Nest':
 				nest = details['who']
 				nest.amount += .01
+				
+		elif self.state == 'flee':
+			if message == 'timer':
+				self.healatnest()
+			elif message == 'collide' and details['what'] == 'Nest':
+				self.amount = 1
+				self.body.stop()
+				self.state = 'idle'
 		
 
 world_specification = {
