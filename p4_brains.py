@@ -91,6 +91,7 @@ class SlugBrain:
 		self.body.go_to(nest)
 		self.flee = True
 		self.body.set_alarm(2)
+		self.body.speed = 250
 		
 	def handle_event(self, message, details):
 		# TODO: IMPLEMENT THIS METHOD
@@ -102,14 +103,15 @@ class SlugBrain:
 		if self.body.amount <= .5:
 			self.healatnest()
 			
-		elif self.flee == True:
+		if self.flee == True:
 			if message == 'timer':
 				self.healatnest()
 			elif message == 'collide' and details['what'] == 'Nest':
-				self.amount = 1
+				self.body.amount = 1
 				self.flee = False
+				self.body.speed = 100
 		
-		if self.flee != True:
+		else:
 			if message == 'order':
 				if details == 'i':
 					#go idle
