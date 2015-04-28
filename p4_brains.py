@@ -50,6 +50,7 @@ class SlugBrain:
 		self.state = 'idle'
 		self.target = None
 		self.resource = False
+		self.flee = False
 
 	def followmantis(self):
 		try:
@@ -88,7 +89,7 @@ class SlugBrain:
 	def healatnest(self):
 		nest = self.body.find_nearest('Nest')
 		self.body.go_to(nest)
-		self.state = 'flee'
+		self.flee = True
 		self.body.set_alarm(2)
 		
 	def handle_event(self, message, details):
@@ -100,8 +101,15 @@ class SlugBrain:
 		
 		if self.body.amount <= .5:
 			self.healatnest()
+			
+		elif self.flee == True:
+			if message == 'timer':
+				self.healatnest()
+			elif message == 'collide' and details['what'] == 'Nest':
+				self.amount = 1
+				self.flee = False
 		
-		if self.state != 'flee':
+		if self.flee != True:
 			if message == 'order':
 				if details == 'i':
 					#go idle
@@ -159,18 +167,10 @@ class SlugBrain:
 			elif message == 'collide' and details['what'] == 'Nest':
 				nest = details['who']
 				nest.amount += .01
-				
-		elif self.state == 'flee':
-			if message == 'timer':
-				self.healatnest()
-			elif message == 'collide' and details['what'] == 'Nest':
-				self.amount = 1
-				self.body.stop()
-				self.state = 'idle'
 		
 
 world_specification = {
-  'worldgen_seed': 13, # comment-out to randomize
+  #'worldgen_seed': 13, # comment-out to randomize
   'nests': 2,
   'obstacles': 25,
   'resources': 5,
